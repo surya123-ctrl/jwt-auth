@@ -19,7 +19,8 @@ const userModel = mongoose.model("users", userSchema);
 
 
 
-//endpointss
+//endpoints
+//register
 const app = express();
 app.use(express.json());
 
@@ -44,6 +45,33 @@ app.post('/register', (req, res) => {
         }
     })
 });
+
+//login
+app.post('/login', (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+    userModel.findOne({ email: email })
+        .then((user) => {
+            if (user) {
+                bcrypt.compare(password, user.password, (err, result) => {
+                    if (result) {
+                        console.log({ user, message: "Logged In" });
+                        res.status(200).send({ user, message: "Logged In" })
+                    }
+                    else {
+                        return res.status(401).json({ message: 'Email or Password is incorrect' });
+                    }
+                })
+            }
+            else {
+                res.status(404).send({ message: "Wrong Email" });
+            }
+        })
+        .catch((error) => {
+            res.status(500).send({ message: 'Could not find user in database' });
+        })
+
+})
 
 app.listen(3000, (req, res) => {
     console.log("Server is running on port 3000");
