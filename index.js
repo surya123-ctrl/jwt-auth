@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 //database connection
 const uri = "mongodb+srv://suryatomar303:Surya%40123@cluster0.i1ultl8.mongodb.net/?retryWrites=true&w=majority"
 mongoose.connect(uri, {
@@ -55,8 +56,18 @@ app.post('/login', (req, res) => {
             if (user) {
                 bcrypt.compare(password, user.password, (err, result) => {
                     if (result) {
-                        console.log({ user, message: "Logged In" });
-                        res.status(200).send({ user, message: "Logged In" })
+                        // generate a token and send to frontend
+                        //jwt token are generated with three things i.e. Headers, Payload, Secret Key
+                        jwt.sign({ email: email }, "Surya", (err, token) => {
+                            if (!err) {
+                                console.log("token : ", token);
+                                res.send({ token: token });
+                            }
+                            else {
+                                console.log("Error in generating Token");
+                                res.send()
+                            }
+                        })
                     }
                     else {
                         return res.status(401).json({ message: 'Email or Password is incorrect' });
