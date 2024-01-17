@@ -39,7 +39,7 @@ app.post('/register', (req, res) => {
                         .then((createdUser) => {
                             res.status(201).send({ createdUser, message: "User registration successful" });
                         }).catch((error) => {
-                            res.status(400).send({ message: "Error in inserting user in database", error });
+                            res.status(500).send({ message: "Error in inserting user in database", error });
                         });
                 }
             })
@@ -61,16 +61,16 @@ app.post('/login', (req, res) => {
                         jwt.sign({ email: email }, "Surya", (err, token) => {
                             if (!err) {
                                 console.log("token : ", token);
-                                res.send({ token: token });
+                                res.status(201).send({ token: token });
                             }
                             else {
                                 console.log("Error in generating Token");
-                                res.send()
+                                res.status(500).send({ message: "Error in generating Token" })
                             }
                         })
                     }
                     else {
-                        return res.status(401).json({ message: 'Email or Password is incorrect' });
+                        return res.status(401).json({ message: 'Password is incorrect' });
                     }
                 })
             }
@@ -84,10 +84,32 @@ app.post('/login', (req, res) => {
 
 })
 
+const isAuthenticated = (req, res, next) => {
+    if (!req.headers.authorization) res.status(401).send({ message: "Please login to access data" });
+    else {
+        const token = req.headers.authorization.split(" ")[1];
+        console.log(token);
+        jwt.verify(token, "Surya", (err, data) => {
+            if (!err) {
+                console.log(data);
+                next();
+            }
+            else {
+                res.status(401).send({ message: "Invalid Token" });
+            }
+        })
+    }
+
+    res.send("Coming from middleware");
+}
+
+app.get('/data', isAuthenticated, (req, res) => {
+    res.send({ message: "This is private data" });
+})
+
 app.listen(3000, (req, res) => {
     console.log("Server is running on port 3000");
 })
-
 
 
 
